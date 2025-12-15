@@ -1,0 +1,91 @@
+const JobListing = require("../models/JobListing");
+const Company = require("../models/Company");
+
+// SAVE job listing
+const createJobListing = async (req, res) => {
+  try {
+    const company = await Company.findOne({
+      _id: req.body.company,
+      user: req.user._id
+    });
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    const jobListing = await JobListing.create({
+      ...req.body,
+      user: req.user._id
+    });
+
+    res.status(201).json({
+      message: "Job listing saved",
+      jobListing
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+
+// GET job listings
+const getJobListings = async (req, res) => {
+  try {
+    const listings = await JobListing.find({ user: req.user._id })
+      .populate("company", "name industry")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(listings);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// MARK as applied
+const markAsApplied = async (req, res) => {
+  try {
+    const listing = await JobListing.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { isApplied: true },
+      { new: true }
+    );
+
+    if (!listing) {
+      return res.status(404).json({ message: "Job listing not found" });
+    }
+
+    res.status(200).json({
+      message: "Marked as applied",
+      listing
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// DELETE listing
+const deleteJobListing = async (req, res) => {
+  try {
+    const listing = await JobListing.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Job listing not found" });
+    }
+
+    res.status(200).json({ message: "Job listing deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  createJobListing,
+  getJobListings,
+  markAsApplied,
+  deleteJobListing
+};
