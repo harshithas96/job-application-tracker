@@ -17,17 +17,17 @@ const searchApplications = async (req, res) => {
 
     const query = { user: userId };
 
-    // 🔍 Keyword search
+    
     if (keyword) {
       query.$text = { $search: keyword };
     }
 
-    // 🎯 Status filter
+    
     if (status) {
       query.status = status;
     }
 
-    // 📅 Date range filter
+    
     if (startDate || endDate) {
       query.createdAt = {};
       if (startDate) query.createdAt.$gte = new Date(startDate);

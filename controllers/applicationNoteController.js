@@ -1,7 +1,6 @@
 const ApplicationNote = require("../models/ApplicationNote");
 const JobApplication = require("../models/JobApplication");
 
-// ADD note
 const addNote = async (req, res) => {
   try {
     const { content } = req.body;
@@ -31,7 +30,6 @@ const addNote = async (req, res) => {
 };
 
 
-// GET notes for application
 const getNotes = async (req, res) => {
   try {
     const notes = await ApplicationNote.find({
@@ -46,7 +44,7 @@ const getNotes = async (req, res) => {
 };
 
 
-// UPDATE note
+
 const updateNote = async (req, res) => {
   try {
     const note = await ApplicationNote.findOneAndUpdate(
@@ -69,7 +67,7 @@ const updateNote = async (req, res) => {
 };
 
 
-// DELETE note
+
 const deleteNote = async (req, res) => {
   try {
     const note = await ApplicationNote.findOneAndDelete({

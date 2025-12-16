@@ -1,7 +1,6 @@
 const JobListing = require("../models/JobListing");
 const Company = require("../models/Company");
 
-// SAVE job listing
 const createJobListing = async (req, res) => {
   try {
     const company = await Company.findOne({
@@ -28,7 +27,7 @@ const createJobListing = async (req, res) => {
 };
 
 
-// GET job listings
+
 const getJobListings = async (req, res) => {
   try {
     const listings = await JobListing.find({ user: req.user._id })
@@ -42,7 +41,6 @@ const getJobListings = async (req, res) => {
 };
 
 
-// MARK as applied
 const markAsApplied = async (req, res) => {
   try {
     const listing = await JobListing.findOneAndUpdate(
@@ -65,7 +63,6 @@ const markAsApplied = async (req, res) => {
 };
 
 
-// DELETE listing
 const deleteJobListing = async (req, res) => {
   try {
     const listing = await JobListing.findOneAndDelete({

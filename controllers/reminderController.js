@@ -1,7 +1,6 @@
 const Reminder = require("../models/Reminder");
 const JobApplication = require("../models/JobApplication");
 
-// CREATE reminder
 const createReminder = async (req, res) => {
   try {
     const { jobApplicationId, reminderDate, message } = req.body;
@@ -32,7 +31,6 @@ const createReminder = async (req, res) => {
 };
 
 
-// GET reminders (logged-in user)
 const getMyReminders = async (req, res) => {
   try {
     const reminders = await Reminder.find({ user: req.user._id })
@@ -46,7 +44,7 @@ const getMyReminders = async (req, res) => {
 };
 
 
-// UPDATE reminder
+
 const updateReminder = async (req, res) => {
   try {
     const reminder = await Reminder.findOneAndUpdate(
@@ -69,7 +67,6 @@ const updateReminder = async (req, res) => {
 };
 
 
-// DELETE reminder
 const deleteReminder = async (req, res) => {
   try {
     const reminder = await Reminder.findOneAndDelete({
