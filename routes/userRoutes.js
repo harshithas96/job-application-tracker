@@ -30,7 +30,7 @@ router.get("/get-all-users",
 
 router.get("/get-loggedin-details", userAuth, getLoggedInDetails)
 
-router.put("/update-details", userAuth, updateDetails)
+router.patch("/update-details", userAuth, updateDetails)
 
 router.delete("/delete-user", userAuth, requireRole("admin"), deleteUser)
 

@@ -6,13 +6,15 @@ const cors = require("cors")
 
 const app = express()
 
-app.use(express.json())
+
 app.use(cookieParser())
 app.use(cors({
-  origin: true,  
-  credentials: true
+  origin: "http://127.0.0.1:8080",  
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }))
-
+app.use(express.json())
 
 const userRouter = require("./routes/userRoutes")
 const jobApplicationRouter = require("./routes/jobApplicationRoutes")
@@ -20,16 +22,14 @@ const reminderRouter = require("./routes/reminderRoutes")
 const companyRouter = require("./routes/companyRoutes")
 const jobListingRouter = require("./routes/jobListingRoutes")
 const dashboardRouter = require("./routes/dashboardRoutes")
-const jonSearchRouter = require("./routes/jobSearchRoutes")
 const applicationNoteRouter = require("./routes/applicationNotesRoutes")
 
-app.use("/", userRouter)
+app.use("/",userRouter)
 app.use("/",jobApplicationRouter)
 app.use("/",reminderRouter)
 app.use("/",companyRouter)
 app.use("/",jobListingRouter)
 app.use("/",dashboardRouter)
-app.use("/",jonSearchRouter)
 app.use("/",applicationNoteRouter)
 
 connectDB().then(()=>{

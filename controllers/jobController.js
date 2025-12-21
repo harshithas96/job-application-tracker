@@ -4,10 +4,12 @@ const createApplication = async (req, res) => {
   try {
     const { companyName, jobTitle, status, notes } = req.body;
 
-    const attachments = req.files?.map(file => ({
-      fileName: file.originalname,
-      filePath: file.path
-    }));
+    const attachments = req.file
+      ? [{
+          fileName: req.file.originalname,
+          filePath: req.file.path
+        }]
+      : [];
 
     const application = await JobApplication.create({
       user: req.user._id,
@@ -30,11 +32,21 @@ const createApplication = async (req, res) => {
 
 const getMyApplications = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+        
+    const totalCount = await JobApplication.countDocuments()
     const applications = await JobApplication.find({
       user: req.user._id
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 }).skip(skip).limit(limit)
 
-    res.status(200).json(applications);
+    res.status(200).json({
+            success: true,
+            message: "Fetched all user details",
+            count: totalCount,
+            data: applications
+        })
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -44,16 +56,26 @@ const getMyApplications = async (req, res) => {
 
 const getApplicationById = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+        
+    const totalCount = await JobApplication.countDocuments()
     const application = await JobApplication.findOne({
       _id: req.params.id,
       user: req.user._id
-    });
+    }).skip(skip).limit(limit)
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    res.status(200).json(application);
+     res.status(200).json({
+            success: true,
+            message: "Fetched all user details",
+            count: totalCount,
+            data: application
+        })
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -2,59 +2,53 @@ const JobApplication = require("../models/JobApplication");
 
 const searchApplications = async (req, res) => {
   try {
-    const userId = req.user._id;
-
     const {
-      keyword,
-      status,
-      startDate,
-      endDate,
-      sortBy = "createdAt",
-      order = "desc",
+      keyword = "",
+      status = "",
       page = 1,
       limit = 10
     } = req.query;
 
+    const userId = req.user.id;
+
     const query = { user: userId };
 
-    
-    if (keyword) {
-      query.$text = { $search: keyword };
+    /* 🔍 KEYWORD SEARCH */
+    if (keyword && keyword.trim().length >= 2) {
+      query.$or = [
+        { companyName: { $regex: keyword, $options: "i" } },
+        { jobTitle: { $regex: keyword, $options: "i" } },
+        { notes: { $regex: keyword, $options: "i" } }
+      ];
     }
 
-    
+    /* 🎯 STATUS FILTER */
     if (status) {
       query.status = status;
     }
 
-    
-    if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
-    }
+    const skip = (Number(page) - 1) * Number(limit);
 
-    const skip = (page - 1) * limit;
-    const sortOrder = order === "asc" ? 1 : -1;
-
-    const [applications, total] = await Promise.all([
+    const [results, total] = await Promise.all([
       JobApplication.find(query)
-        .sort({ [sortBy]: sortOrder })
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
-
       JobApplication.countDocuments(query)
     ]);
 
-    res.status(200).json({
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      results: applications
+    
+    res.json({
+      results,
+      total
     });
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Search error:", err);
+    res.status(500).json({ message: "Search failed" });
   }
 };
+
+
 
 module.exports = { searchApplications };

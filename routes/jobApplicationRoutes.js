@@ -12,18 +12,22 @@ const {
   deleteApplication
 } = require("../controllers/jobController");
 
+const { searchApplications } = require("../controllers/jobSearch");
+
 router.post(
   "/applications",
   userAuth,
-  upload.array("attachments", 3),
+  upload.single("attachments"),
   createApplication
 );
 
 router.get("/applications", userAuth, getMyApplications);
 
+router.get("/applications/search", userAuth, searchApplications);
+
 router.get("/applications/:id", userAuth, getApplicationById);
 
-router.put("/applications/:id", userAuth, updateApplication);
+router.patch("/applications", userAuth, updateApplication);
 
 router.delete("/applications/:id", userAuth, deleteApplication);
 

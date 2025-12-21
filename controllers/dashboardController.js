@@ -1,11 +1,16 @@
 const JobApplication = require("../models/JobApplication");
+const mongoose = require("mongoose")
 
 const getDashboardOverview = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = new mongoose.Types.ObjectId(req.user._id);
 
     const stats = await JobApplication.aggregate([
-      { $match: { user: userId } },
+      {
+        $match: {
+          user: userId
+        }
+      },
       {
         $group: {
           _id: "$status",
@@ -14,7 +19,7 @@ const getDashboardOverview = async (req, res) => {
       }
     ]);
 
-    let overview = {
+    const overview = {
       total: 0,
       applied: 0,
       interviewed: 0,
@@ -23,20 +28,22 @@ const getDashboardOverview = async (req, res) => {
       withdrawn: 0
     };
 
-    stats.forEach(stat => {
+    for (const stat of stats) {
       overview[stat._id] = stat.count;
       overview.total += stat.count;
-    });
+    }
 
     res.status(200).json(overview);
   } catch (err) {
+    console.error("Dashboard error:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
+
 const getStatusChartData = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = new mongoose.Types.ObjectId(req.user._id)
 
     const data = await JobApplication.aggregate([
       { $match: { user: userId } },
@@ -63,7 +70,7 @@ const getStatusChartData = async (req, res) => {
 
 const getTimelineData = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = new mongoose.Types.ObjectId(req.user._id)
 
     const timeline = await JobApplication.aggregate([
       { $match: { user: userId } },
@@ -92,7 +99,7 @@ const getTimelineData = async (req, res) => {
 
 const getResponseMetrics = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = new mongoose.Types.ObjectId(req.user._id)
 
     const total = await JobApplication.countDocuments({ user: userId });
     const interviews = await JobApplication.countDocuments({

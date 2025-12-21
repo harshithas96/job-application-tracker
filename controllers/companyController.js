@@ -1,4 +1,5 @@
 const Company = require("../models/Company");
+const mongoose = require("mongoose")
 
 // CREATE company
 const createCompany = async (req, res) => {
@@ -21,11 +22,21 @@ const createCompany = async (req, res) => {
 // GET all companies
 const getCompanies = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    const totalCount = await Company.countDocuments()
     const companies = await Company.find({ user: req.user._id }).sort({
       createdAt: -1
-    });
+    }).skip(skip).limit(limit)
 
-    res.status(200).json(companies);
+     res.status(200).json({
+            success: true,
+            message: "Fetched all user details",
+            count: totalCount,
+            data: companies
+        })
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -36,7 +47,8 @@ const getCompanies = async (req, res) => {
 const updateCompany = async (req, res) => {
   try {
     const company = await Company.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
+      { _id: new mongoose.Types.ObjectId(req.params.id), 
+        user: new mongoose.Types.ObjectId(req.user._id) },
       req.body,
       { new: true, runValidators: true }
     );

@@ -89,7 +89,8 @@ const userLogin = async(req,res) =>{
 
         res.status(200).json({
             message: "Login successful",
-            user: user.email
+            user: user.email,
+            userRole: user.role
         })
     }
     catch(err){
@@ -182,12 +183,14 @@ const getAllUsers = async(req,res)=>{
         const limit = Number(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
+        const totalCount = await User.countDocuments()
+
         const user = await User.find().select("-password").skip(skip).limit(limit)
 
         res.status(200).json({
             success: true,
             message: "Fetched all user details",
-            count: user.length,
+            count: totalCount,
             data: user
         })
     }

@@ -11,7 +11,7 @@ const {
 
 router.post("/companies", userAuth, createCompany);
 router.get("/companies", userAuth, getCompanies);
-router.put("/companies/:id", userAuth, updateCompany);
+router.patch("/companies/:id", userAuth, updateCompany);
 router.delete("/companies/:id", userAuth, deleteCompany);
 
 module.exports = router;
