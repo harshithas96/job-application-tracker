@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Job Tracker Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+  background: linear-gradient(135deg,#5970d9,#503368);
+  background-color: #0d6efd;
+  min-height:100vh;
+  font-family: Arial, sans-serif;
+}
+.container { max-width: 900px; margin:50px auto; }
+.card { border-radius: 15px; }
+.hidden { display:none; }
+button { border-radius: 6px; }
+input, select, textarea { border-radius: 6px; }
+.top-left-buttons {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.dashboard-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.dashboard-sidebar {
+  width: 220px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.dashboard-sidebar button {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.dashboard-content {
+  flex: 1;
+}
+.dashboard-stats-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.stat-box {
+  flex: 1;
+  min-width: 150px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.stat-box h6 {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.stat-box span {
+  font-size: 24px;
+  font-weight: bold;
+  color: #0d6efd;
+}
+
+
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginView" class="card p-4 shadow bg-white">
+  <h4 class="text-center mb-3">Login</h4>
+  <input class="form-control mb-2" placeholder="Email" id="loginEmail">
+  <input class="form-control mb-3" type="password" placeholder="Password" id="loginPassword">
+  <button class="btn btn-primary w-100 mb-2" onclick="login()">Login</button>
+  <div class="text-center">
+    <a href="#" onclick="showSignup()">Signup</a> |
+    <a href="#" onclick="showForgot()">Forgot password?</a>
+  </div>
+</div>
+
+<!-- SIGNUP -->
+<div id="signupView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Signup</h4>
+  <input class="form-control mb-2" placeholder="Name" id="sName">
+  <input class="form-control mb-2" placeholder="Email" id="sEmail">
+  <input class="form-control mb-2" placeholder="Phone" id="sPhone">
+  <input class="form-control mb-3" type="password" placeholder="Password" id="sPassword">
+  <button class="btn btn-success w-100" onclick="signup()">Signup</button>
+  <div class="text-center mt-2">
+    <a href="#" onclick="showLogin()">Back</a>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div id="forgotView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Forgot Password</h4>
+  <input class="form-control mb-3" placeholder="Email" id="forgotEmail">
+  <button class="btn btn-warning w-100" onclick="forgotPassword()">Send Reset Link</button>
+  <div class="text-center mt-2">
+    <a href="#" onclick="showLogin()">Back</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardView" class="card p-4 shadow bg-white hidden">
+    <div class="text-center mt-5"><h2>Welcome to Job Tracker</h2></div>
+  <div class="dashboard-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="dashboard-sidebar">
+      <button class="btn btn-primary" onclick="showProfileMenu()">Profile</button>
+      <button class="btn btn-success" onclick="showCompanyMenu()">Companies</button>
+      <button class="btn btn-success" onclick="showJobListingMenu()">JobListing</button>
+      <button class="btn btn-success" onclick="showJobMenu()">Job Applications</button>
+      <button class="btn btn-secondary" onclick="showAnalytics()">View Analytics</button>
+      <button class="btn btn-secondary" onclick="showAdmin()" id="adminBtn" style="display:none;">Admin</button>
+      <button class="btn btn-danger" onclick="logout()">Logout</button>
+    </div>
+
+    
+    <!-- RIGHT CONTENT -->
+    <div class="dashboard-content">
+
+      <p class="text-muted mb-4">Track your applications and progress</p>
+
+
+      <!-- DASHBOARD STATS -->
+  <div class="dashboard-stats-row">
+  <div class="stat-box">
+    <h6>Total</h6>
+    <span id="statTotal">0</span>
+  </div>
+
+  <div class="stat-box">
+    <h6>Applied</h6>
+    <span id="statApplied">0</span>
+  </div>
+
+  <div class="stat-box">
+    <h6>Interviewed</h6>
+    <span id="statInterviewed">0</span>
+  </div>
+
+  <div class="stat-box">
+    <h6>Offered</h6>
+    <span id="statOffered">0</span>
+  </div>
+
+  <div class="stat-box">
+    <h6>Rejected</h6>
+    <span id="statRejected">0</span>
+  </div>
+
+  <div class="stat-box">
+    <h6>Withdrawn</h6>
+    <span id="statWithdrawn">0</span>
+  </div>
+</div>
+
+
+    </div>
+  </div>
+  <!-- SEARCH & FILTER SECTION -->
+<div class="card p-3 mb-4">
+  <div class="row g-2">
+    <div class="col-md-6">
+      <input
+  type="text"
+  class="form-control"
+  id="searchKeyword"
+  placeholder="Search job applications..."
+  onkeydown="if(event.key==='Enter'){searchJobs()}"
+/>
+<select class="form-select" id="searchStatus" onchange="searchJobs()">
+  <option value="">All Status</option>
+  <option value="applied">Applied</option>
+  <option value="interviewed">Interviewed</option>
+  <option value="offered">Offered</option>
+  <option value="rejected">Rejected</option>
+  <option value="withdrawn">Withdrawn</option>
+</select>
+
+    </div>
+  </div>
+  <button class="btn btn-primary mt-2" onclick="searchJobs()">Search</button>
+</div>
+
+<!-- SEARCH RESULTS -->
+<div id="searchResultsView" class="card p-4 shadow bg-white hidden">
+  <button class="btn btn-outline-secondary mb-3" onclick="showDashboard()">
+    ⬅ Back to Dashboard
+  </button>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <label>Rows per page: 
+        <select id="searchLimitSelect" onchange="changeSearchLimit()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </label>
+    </div>
+   <div class="d-flex justify-content-between align-items-center mt-2">
+    <button class="btn btn-outline-primary btn-sm" onclick="searchPrevPage()">Prev</button>
+    <span>Page <span id="searchCurrentPage">1</span> / <span id="searchTotalPages">1</span></span>
+    <button class="btn btn-outline-primary btn-sm" onclick="searchNextPage()">Next</button>
+  </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered" id="searchTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Company</th>
+          <th>Job Title</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</div>
+
+</div>
+
+<div id="analyticsPage" class="card p-4 shadow bg-white hidden">
+
+  <button class="btn btn-outline-secondary mb-3" onclick="backToDashboard()">
+    ⬅ Back to Dashboard
+  </button>
+
+  <h2>Application Analytics</h2>
+
+  <div style="display:flex; gap:30px; flex-wrap:wrap; margin-top:20px">
+
+    <div style="width:400px;">
+      <h4>Status Breakdown</h4>
+      <canvas id="statusChart"></canvas>
+    </div>
+
+    <div style="width:600px;">
+      <h4>Timeline</h4>
+      <canvas id="timelineChart"></canvas>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- PROFILE MENU -->
+<div id="profileMenuView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Profile Menu</h4>
+  <div class="d-grid gap-3">
+    <button class="btn btn-primary" onclick="showProfileDetails()">View Profile Details</button>
+    <button class="btn btn-warning" onclick="showUpdateProfile()">Update Profile</button>
+    <button class="btn btn-info" onclick="showChangePassword()">Change Password</button>
+    <button class="btn btn-dark" onclick="showDashboard()">Back to Dashboard</button>
+  </div>
+</div>
+
+<!-- PROFILE DETAILS -->
+<div id="profileDetailView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Profile Details</h4>
+  <div id="profileCard" class="mb-3"></div>
+  <button class="btn btn-secondary w-100" onclick="showProfileMenu()">Back to Profile Menu</button>
+</div>
+
+<!-- UPDATE PROFILE -->
+<div id="updateProfileView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Update Profile</h4>
+  <input class="form-control mb-2" placeholder="Name" id="uName">
+  <input class="form-control mb-2" placeholder="Location" id="uLocation">
+  <input class="form-control mb-2" placeholder="Career Goals" id="uCareer">
+  <input class="form-control mb-2" placeholder="LinkedIn URL" id="uLinkedIn">
+  <select class="form-select mb-2" id="uExp">
+    <option value="">Select Experience Level</option>
+    <option value="fresher">Fresher</option>
+    <option value="junior">Junior</option>
+    <option value="mid">Mid</option>
+    <option value="senior">Senior</option>
+  </select>
+  <button class="btn btn-warning w-100 mb-3" onclick="updateProfile()">Update Profile</button>
+  <button class="btn btn-secondary w-100" onclick="showProfileMenu()">Back to Profile Menu</button>
+</div>
+
+<!-- CHANGE PASSWORD -->
+<div id="changePasswordView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Change Password</h4>
+  <input class="form-control mb-2" type="password" placeholder="Old Password" id="oldPass">
+  <input class="form-control mb-2" type="password" placeholder="New Password" id="newPass">
+  <button class="btn btn-info w-100 mb-3" onclick="changePassword()">Change Password</button>
+  <button class="btn btn-secondary w-100" onclick="showProfileMenu()">Back to Profile Menu</button>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="adminView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Admin - All Users</h4>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <label>Rows per page: 
+        <select id="adminLimitSelect" onchange="changeAdminLimit()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <button class="btn btn-outline-primary btn-sm" id="prevBtn" onclick="prevPage()">Previous</button>
+      <span>Page <span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+      <button class="btn btn-outline-primary btn-sm" id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+  </div>
+
+  <div class="table-responsive mb-3">
+    <table class="table table-striped table-bordered" id="userTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Location</th>
+          <th>Career Goals</th><th>Experience</th><th>Active</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <button class="btn btn-secondary w-100" onclick="showDashboard()">Back to Dashboard</button>
+</div>
+
+<!-- COMPANY MENU -->
+<div id="companyMenuView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Companies</h4>
+  <div class="d-grid gap-2">
+    <button class="btn btn-primary" onclick="showCreateCompany()">Add Company</button>
+    <button class="btn btn-secondary" onclick="showCompanyList()">View All Companies</button>
+    <button class="btn btn-secondary" onclick="showDashboard()">Back to Dashboard</button>
+  </div>
+</div>
+
+<!-- CREATE/EDIT COMPANY -->
+<div id="createCompanyView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Add Company</h4>
+  <input class="form-control mb-2" placeholder="Company Name" id="cName">
+  <input class="form-control mb-2" placeholder="Industry" id="cIndustry">
+  <select class="form-select mb-2" id="cSize">
+    <option value="">Select Company Size</option>
+    <option value="startup">Startup</option>
+    <option value="small">Small</option>
+    <option value="medium">Medium</option>
+    <option value="enterprise">Enterprise</option>
+  </select>
+  <input class="form-control mb-2" placeholder="Website" id="cWebsite">
+  <input class="form-control mb-2" placeholder="Contact Email" id="cEmail">
+  <textarea class="form-control mb-2" placeholder="Notes" id="cNotes"></textarea>
+  <button class="btn btn-primary w-100 mb-2" onclick="createCompany()">Save</button>
+  <button class="btn btn-secondary w-100" onclick="showCompanyMenu()">Back to Companies</button>
+</div>
+
+<!-- COMPANY LIST -->
+<div id="companyListView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">My Companies</h4>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <label>Rows per page: 
+        <select id="companyLimitSelect" onchange="changeCompanyLimit()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <button class="btn btn-outline-primary btn-sm" id="companyPrevBtn" onclick="prevCompanyPage()">Previous</button>
+      <span>Page <span id="companyCurrentPage">1</span> / <span id="companyTotalPages">1</span></span>
+      <button class="btn btn-outline-primary btn-sm" id="companyNextBtn" onclick="nextCompanyPage()">Next</button>
+    </div>
+  </div>
+
+  <div class="table-responsive mb-3">
+    <table class="table table-striped table-bordered" id="companyTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Name</th><th>Industry</th><th>Size</th><th>Website</th><th>Contact</th><th>Notes</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <button class="btn btn-secondary w-100" onclick="showCompanyMenu()">Back to Companies</button>
+</div>
+
+<!-- JOB APPLICATION MENU -->
+<div id="jobMenuView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Job Applications</h4>
+  <div class="d-grid gap-2">
+    <button class="btn btn-primary" onclick="showCreateJob()">Add Application</button>
+    <button class="btn btn-secondary" onclick="showJobList()">View All Applications</button>
+    <button class="btn btn-secondary" onclick="showDashboard()">Back to Dashboard</button>
+  </div>
+</div>
+
+<!-- CREATE JOB APPLICATION -->
+<div id="createJobView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Add Job Application</h4>
+  <input class="form-control mb-2" placeholder="Company Name" id="jCompany">
+  <input class="form-control mb-2" placeholder="Job Title" id="jTitle">
+  <select class="form-select mb-2" id="jStatus">
+    <option value="applied">Applied</option>
+    <option value="interviewed">Interviewed</option>
+    <option value="offered">Offered</option>
+    <option value="rejected">Rejected</option>
+    <option value="withdrawn">Withdrawn</option>
+  </select>
+  <textarea class="form-control mb-2" placeholder="Notes" id="jNotes"></textarea>
+  <input
+  type="file"
+  class="form-control mb-2"
+  id="jResume"
+  accept=".pdf,.doc,.docx"
+/>
+   <button id="jobSaveBtn"
+          class="btn btn-primary w-100 mb-2"
+          onclick="createJob()">Save</button>
+  <button class="btn btn-secondary w-100" onclick="showJobMenu()">Back to Job Menu</button>
+</div>
+
+<!-- JOB APPLICATION LIST -->
+<div id="jobListView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">My Job Applications</h4>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <label>Rows per page: 
+        <select id="jobLimitSelect" onchange="changeJobLimit()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <button class="btn btn-outline-primary btn-sm" id="jobPrevBtn" onclick="prevJobPage()">Previous</button>
+      <span>Page <span id="jobCurrentPage">1</span> / <span id="jobTotalPages">1</span></span>
+      <button class="btn btn-outline-primary btn-sm" id="jobNextBtn" onclick="nextJobPage()">Next</button>
+    </div>
+  </div>
+  <div class="table-responsive mb-3">
+    <table class="table table-striped table-bordered" id="jobTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Company</th><th>Title</th><th>Status</th><th>Date</th><th>Notes</th><th>Actions</th><th>Resume</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <button class="btn btn-secondary w-100" onclick="showJobMenu()">Back to Job Menu</button>
+</div>
+
+<div id="jobListingMenuView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Job Listings</h4>
+  <div class="d-grid gap-2">
+    <button class="btn btn-primary" onclick="showCreateJobListing()">Add Job Listing</button>
+    <button class="btn btn-secondary" onclick="showJobListingList()">View All Listings</button>
+    <button class="btn btn-secondary" onclick="showDashboard()">Back to Dashboard</button>
+  </div>
+</div>
+
+<div id="createJobListingView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">Add Job Listing</h4>
+  <select class="form-select mb-2" id="jlCompany"><option>Select Company</option></select>
+  <input class="form-control mb-2" placeholder="Job Title" id="jlTitle">
+  <input class="form-control mb-2" placeholder="Location" id="jlLocation">
+  <select class="form-select mb-2" id="jlType">
+    <option value="">Job Type</option>
+    <option value="full-time">Full-time</option>
+    <option value="part-time">Part-time</option>
+    <option value="contract">Contract</option>
+    <option value="internship">Internship</option>
+  </select>
+  <input class="form-control mb-2" placeholder="Source URL" id="jlUrl">
+  <textarea class="form-control mb-2" placeholder="Notes" id="jlNotes"></textarea>
+  <button id="jlSaveBtn" class="btn btn-primary w-100 mb-2" onclick="saveJobListing()">Save</button>
+  <button class="btn btn-secondary w-100" onclick="showJobListingMenu()">Back</button>
+</div>
+
+<div id="jobListingListView" class="card p-4 shadow bg-white hidden">
+  <h4 class="text-center mb-3">My Job Listings</h4>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <label>Rows per page: 
+        <select id="jlLimitSelect" onchange="changeJobListingLimit()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <button class="btn btn-outline-primary btn-sm" id="jobprevbutton"onclick="prevJobListingPage()">Previous</button>
+      <span>Page <span id="jlCurrentPage">1</span> / <span id="jlTotalPages">1</span></span>
+      <button class="btn btn-outline-primary btn-sm" id="jobnextbutton"onclick="nextJobListingPage()">Next</button>
+    </div>
+  </div>
+  <div class="table-responsive mb-3">
+    <table class="table table-striped table-bordered" id="jobListingTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Company</th><th>Title</th><th>Type</th><th>Location</th><th>Applied</th><th>Notes</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <button class="btn btn-secondary w-100" onclick="showJobListingMenu()">Back</button>
+</div>
+
+<script>
+const BASE_URL = "http://127.0.0.1:3000";
+let loggedInRole = "";
+let adminCurrentPage = 1;
+let adminLimit = 10;
+let companyCurrentPage = 1;
+let companyLimit = 10;
+let jobCurrentPage = 1;
+let jobLimit = 10;
+let editingJobId = null;
+let jobListingCurrentPage = 1, jobListingLimit = 10, editingJobListingId = null;
+
+/* ---------- VIEW CONTROL ---------- */
+function hideAll(){
+  loginView.classList.add("hidden"); signupView.classList.add("hidden"); forgotView.classList.add("hidden");
+  dashboardView.classList.add("hidden"); profileMenuView.classList.add("hidden"); profileDetailView.classList.add("hidden");
+  updateProfileView.classList.add("hidden"); changePasswordView.classList.add("hidden"); adminView.classList.add("hidden");
+  companyMenuView.classList.add("hidden"); createCompanyView.classList.add("hidden"); companyListView.classList.add("hidden");
+  jobMenuView.classList.add("hidden"); createJobView.classList.add("hidden"); 
+  jobListView.classList.add("hidden"); jobListingMenuView.classList.add("hidden")
+  createJobListingView.classList.add("hidden")
+  jobListingListView.classList.add("hidden")
+  analyticsPage.classList.add("hidden")
+  searchResultsView.classList.add("hidden")
+}
+function showLogin(){ hideAll(); loginView.classList.remove("hidden"); }
+function showSignup(){ hideAll(); signupView.classList.remove("hidden"); }
+function showForgot(){ hideAll(); forgotView.classList.remove("hidden"); }
+function showDashboard(){ 
+  hideAll(); 
+  dashboardView.classList.remove("hidden");
+  loadDashboardOverview();
+  loadDashboardMetrics();
+ }
+function showProfileMenu(){ hideAll(); profileMenuView.classList.remove("hidden"); }
+function showProfileDetails(){ hideAll(); profileDetailView.classList.remove("hidden"); loadProfile(); }
+function showUpdateProfile(){ hideAll(); updateProfileView.classList.remove("hidden"); loadProfileForUpdate(); }
+function showChangePassword(){ hideAll(); changePasswordView.classList.remove("hidden"); }
+function showAdmin(){ if(loggedInRole!=="admin") return alert("Access denied"); hideAll(); adminView.classList.remove("hidden"); loadAdminUsers(); }
+function showCompanyMenu(){ hideAll(); companyMenuView.classList.remove("hidden"); }
+function showCreateCompany(){ hideAll(); createCompanyView.classList.remove("hidden"); }
+function showCompanyList(){ hideAll(); companyListView.classList.remove("hidden"); loadCompanies(); }
+function showJobMenu(){ hideAll(); jobMenuView.classList.remove("hidden"); }
+function showCreateJob(){ hideAll(); createJobView.classList.remove("hidden"); }
+function showJobList(){ hideAll(); jobListView.classList.remove("hidden"); loadJobs(); }
+function showJobListingMenu(){ hideAll(); jobListingMenuView.classList.remove("hidden"); }
+function showCreateJobListing(){ hideAll(); createJobListingView.classList.remove("hidden"); loadCompanyOptions(); resetJobListingForm(); }
+function showJobListingList(){ hideAll(); jobListingListView.classList.remove("hidden"); loadJobListings(); }
+function showAnalytics(){hideAll()}
+function resetJobListingForm(){
+  jlCompany.value=""; jlTitle.value=""; jlLocation.value="";
+  jlType.value=""; jlUrl.value=""; jlNotes.value="";
+  editingJobListingId = null; jlSaveBtn.textContent="Save";
+}
+async function loadCompanyOptions(){
+  const res = await fetch(`${BASE_URL}/companies`, {credentials:"include"});
+  if(!res.ok) return alert("Failed to load companies");
+  const data = await res.json();
+  jlCompany.innerHTML=`<option value="">Select Company</option>`;
+  data.data.forEach(c=>{
+    const opt=document.createElement("option");
+    opt.value=c._id; opt.textContent=c.name;
+    jlCompany.appendChild(opt);
+  });
+}
+
+
+
+async function saveJobListing(){
+  if(!jlCompany.value||!jlTitle.value) return alert("Company & Title required");
+  const payload = { company:jlCompany.value, jobTitle:jlTitle.value, location:jlLocation.value, jobType:jlType.value, sourceUrl:jlUrl.value, notes:jlNotes.value };
+  let url=`${BASE_URL}/job-listings`, method="POST";
+  if(editingJobListingId){ url=`${BASE_URL}/job-listings/${editingJobListingId}`; method="PUT"; }
+  const res = await fetch(url,{ method, credentials:"include", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(payload) });
+  if(!res.ok) return alert("Save failed");
+  alert(editingJobListingId ? "Updated" : "Created");
+  resetJobListingForm(); showJobListingList();
+}
+
+async function loadJobListings(page=1){
+  jobListingCurrentPage=page;
+  const res = await fetch(`${BASE_URL}/job-listings?page=${page}&limit=${jobListingLimit}`, {credentials:"include"});
+  if(!res.ok) return alert("Failed to load job listings");
+  const data = await res.json();
+  const totalPages = Math.ceil(data.count/jobListingLimit) || 1;
+  document.getElementById("jlCurrentPage").innerText=jobListingCurrentPage;
+  document.getElementById("jlTotalPages").innerText=totalPages;
+  const tbody=document.querySelector("#jobListingTable tbody"); tbody.innerHTML="";
+  data.data.forEach(j=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${j.company.name}</td>
+      <td>${j.jobTitle}</td>
+      <td>${j.jobType||"-"}</td>
+      <td>${j.location||"-"}</td>
+      <td>${j.isApplied?"Yes":"No"}</td>
+      <td>${j.notes||""}</td>
+      <td>
+        <button class="btn btn-warning btn-sm" onclick="editJobListing('${j._id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteJobListing('${j._id}')">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  jobprevbutton.disabled = jobListingCurrentPage === 1;
+  jobnextbutton.disabled = jobListingCurrentPage >= totalPages;
+}
+
+function changeJobListingLimit(){
+  jobListingLimit = Number(document.getElementById("jLimitSelect").value);
+  loadJobListings(1);
+}
+
+function nextJobListingPage(){
+  loadJobListings(jobListingCurrentPage + 1);
+}
+
+function prevJobListingPage(){
+  if(jobListingCurrentPage > 1) loadJobListings(jobListingCurrentPage - 1);
+}
+
+async function editJobListing(id){
+  const res=await fetch(`${BASE_URL}/job-listings/${id}`,{credentials:"include"});
+  if(!res.ok) return alert("Failed to fetch listing");
+  const j=await res.json();
+  editingJobListingId=j._id; showCreateJobListing();
+  jlCompany.value=j.company._id; jlTitle.value=j.jobTitle; jlLocation.value=j.location||"";
+  jlType.value=j.jobType||""; jlUrl.value=j.sourceUrl||""; jlNotes.value=j.notes||"";
+  jlSaveBtn.textContent="Update";
+}
+async function deleteJobListing(id){
+  if(!confirm("Delete this listing?")) return;
+  const res=await fetch(`${BASE_URL}/job-listings/${id}`,{method:"DELETE",credentials:"include"});
+  if(!res.ok) return alert("Delete failed"); alert("Deleted"); loadJobListings(jobListingCurrentPage);
+}
+
+
+/* ---------- JOB APPLICATION CRUD ---------- */
+
+async function createJob(){
+
+  const formData = new FormData();
+  formData.append("companyName", jCompany.value);
+  formData.append("jobTitle", jTitle.value);
+  formData.append("status", jStatus.value);
+  formData.append("notes", jNotes.value);
+
+  if (jResume.files[0]) {
+    formData.append("attachments", jResume.files[0]); 
+  }
+
+  let url = `${BASE_URL}/applications`;
+  let method = "POST";
+
+
+  await fetch(url, {
+    method,
+    credentials: "include",
+    body: formData
+  });
+
+  // ✅ reset edit mode
+  
+ alert("Job application created successfully!");
+  jResume.value = "";
+  showJobMenu();
+
+}
+
+
+async function loadJobs(page=1){
+  jobCurrentPage = page;
+
+  const res = await fetch(`${BASE_URL}/applications?page=${page}&limit=${jobLimit}`,{
+    credentials:"include"
+  });
+  const data = await res.json();
+
+  const totalPages = Math.ceil(data.count / jobLimit) || 1;
+  jobCurrentPage = page;
+
+  //jobCurrentPageSpan.innerText = page;
+  jobTotalPages.innerText = totalPages;
+
+  const tbody = document.querySelector("#jobTable tbody");
+  tbody.innerHTML = "";
+
+  data.data.forEach(j=>{
+    tbody.innerHTML += `
+      <tr>
+        <td>${j.companyName}</td>
+        <td>${j.jobTitle}</td>
+        <td>${j.status}</td>
+        <td>${new Date(j.createdAt).toLocaleDateString()}</td>
+        <td>${j.notes || ""}</td>
+        <td>
+  ${
+    j.attachments && j.attachments.length > 0
+      ? `<a href="${BASE_URL}/${j.attachments[0].filePath}" target="_blank">
+           View Resume
+         </a>`
+      : "-"
+  }
+</td>
+        <td>
+          <button class="btn btn-warning btn-sm" onclick="updateJob()">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteJob('${j._id}')">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  jobPrevBtn.disabled = jobCurrentPage === 1;
+  jobNextBtn.disabled = jobCurrentPage >= totalPages;
+}
+function changeJobLimit(){
+  jobLimit = Number(document.getElementById("jobLimitSelect").value);
+  loadJobs(1);
+}
+
+function nextJobPage(){
+  loadJobs(jobCurrentPage + 1);
+}
+
+function prevJobPage(){
+  if(jobCurrentPage > 1) loadJobs(jobCurrentPage - 1);
+}
+
+
+async function updateJob(){
+
+  const res = await fetch(`${BASE_URL}/applications`,{
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({
+      companyName: jCompany.value,
+      jobTitle: jTitle.value,
+      status: jStatus.value,
+      notes: jNotes.value
+    })
+  });
+
+  if(!res.ok) return alert("Job update failed");
+
+  alert("Job updated");
+  editingId = null;
+  showJobMenu();
+}
+
+
+async function deleteJob(id){
+  if(!confirm("Delete application?")) return;
+  const res = await fetch(`${BASE_URL}/applications/${id}`,{method:"DELETE",credentials:"include"});
+  if(!res.ok) return alert("Delete failed");
+  loadJobs(jobCurrentPage);
+}
+
+/* ---------- LOGIN ---------- */
+async function login(){
+  const res = await fetch(`${BASE_URL}/login`,{
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ email: loginEmail.value, password: loginPassword.value })
+  });
+  if(!res.ok) return alert("Login failed");
+  const data = await res.json();
+  loggedInRole = data.userRole || "user";
+  showDashboard();
+  loadDashboardOverview()
+  loadDashboardMetrics()
+  const adminBtn = document.getElementById("adminBtn");
+  const companyBtn = document.getElementById("companyBtn");
+  if(loggedInRole === "admin"){ adminBtn.style.display="inline-block"; }
+  else { adminBtn.style.display="none"; }
+  if(loggedInRole) companyBtn.style.display="inline-block";
+ 
+}
+
+/* ---------- SIGNUP ---------- */
+async function signup(){
+  const res = await fetch(`${BASE_URL}/register`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name:sName.value,email:sEmail.value,phoneNumber:sPhone.value,password:sPassword.value
+    })
+  });
+  if(!res.ok) return alert("Signup failed");
+  alert("Signup success");
+  showLogin();
+}
+
+/* ---------- FORGOT PASSWORD ---------- */
+async function forgotPassword(){
+  const res = await fetch(`${BASE_URL}/forgot-password`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ email: forgotEmail.value })
+  });
+  if(!res.ok) return alert("Failed to send link");
+  alert("Password reset link sent!");
+  showLogin();
+}
+
+/* ---------- PROFILE ---------- */
+async function loadProfile(){
+  const res = await fetch(`${BASE_URL}/get-loggedin-details`,{ credentials:"include" });
+  if(!res.ok) return alert("Unauthorized");
+  const data = await res.json();
+  const u = data.data[0];
+  profileCard.innerHTML = `
+    <p><b>Email:</b> ${u.email}</p>
+    <p><b>Role:</b> ${u.role}</p>
+    <p><b>Phone:</b> ${u.phoneNumber}</p>
+    <p><b>Location:</b> ${u.location||'-'} </p>
+    <p><b>Career Goals:</b> ${u.careerGoals||'-'} </p>
+    <p><b>LinkedIn:</b> ${u.linkedinUrl||'-'} </p>
+    <p><b>Experience:</b> ${u.experienceLevel||'-'} </p>
+  `;
+}
+
+/* ---------- UPDATE PROFILE ---------- */
+async function updateProfile(){
+  const res = await fetch(`${BASE_URL}/update-details`,{
+    method:"PATCH", credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name:uName.value, location:uLocation.value, careerGoals:uCareer.value,
+      linkedinUrl:uLinkedIn.value, experienceLevel:uExp.value
+    })
+  });
+  if(!res.ok) return alert("Update failed");
+  alert("Profile updated");
+}
+
+/* ---------- CHANGE PASSWORD ---------- */
+async function changePassword(){
+  const res = await fetch(`${BASE_URL}/change-password`,{
+    method:"PUT", credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ oldPassword:oldPass.value, newPassword:newPass.value })
+  });
+  if(!res.ok) return alert("Change password failed");
+  alert("Password changed");
+}
+
+/* ---------- ADMIN ---------- */
+async function loadAdminUsers(page = 1){
+  adminCurrentPage = page;
+  const res = await fetch(`${BASE_URL}/get-all-users?page=${page}&limit=${adminLimit}`, { credentials:"include" });
+  if(!res.ok) return alert("Admin only");
+  const data = await res.json();
+
+  const totalPages = Math.ceil(data.count / adminLimit) || 1;
+  document.getElementById("currentPage").textContent = adminCurrentPage;
+  document.getElementById("totalPages").textContent = totalPages;
+
+  const tbody = document.querySelector("#userTable tbody");
+  tbody.innerHTML = "";
+  data.data.forEach(u=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.name}</td><td>${u.email}</td><td>${u.phoneNumber}</td><td>${u.role}</td>
+      <td>${u.location||'-'}</td><td>${u.careerGoals||'-'}</td><td>${u.experienceLevel||'-'}</td>
+      <td>${u.isActive?'Yes':'No'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("prevBtn").disabled = adminCurrentPage === 1;
+  document.getElementById("nextBtn").disabled = adminCurrentPage >= totalPages;
+}
+
+function changeAdminLimit(){ adminLimit = Number(document.getElementById("adminLimitSelect").value); loadAdminUsers(1); }
+function nextPage(){ loadAdminUsers(adminCurrentPage + 1); }
+function prevPage(){ if(adminCurrentPage>1) loadAdminUsers(adminCurrentPage-1); }
+
+/* ---------- LOGOUT ---------- */
+async function logout(){
+  await fetch(`${BASE_URL}/logout`,{method:"POST",credentials:"include"});
+  loggedInRole="";
+  editingJobId=null;
+  editingCompanyId=null;
+  showLogin();
+}
+
+
+async function authGuard() {
+  const res = await fetch(`${BASE_URL}/get-loggedin-details`, {
+    credentials: "include"
+  });
+
+  if (!res.ok) {
+    logout();
+  }
+}
+
+authGuard();
+
+
+/* ---------- COMPANY CRUD ---------- */
+async function createCompany(){
+  const btn = createCompanyView.querySelector("button.btn-primary");
+  const isUpdate = btn.textContent==="Update";
+  const id = btn.dataset.id;
+  if(isUpdate){
+    // handled in editCompany onclick
+    return;
+  }
+  const res = await fetch(`${BASE_URL}/companies`,{
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      name:cName.value,
+      industry:cIndustry.value,
+      companySize:cSize.value,
+      website:cWebsite.value,
+      contactEmail:cEmail.value,
+      notes:cNotes.value
+    })
+  });
+  if(!res.ok) return alert("Failed to create company");
+  alert("Company created");
+  showCompanyList();
+}
+
+
+async function loadCompanies(page = 1){
+  companyCurrentPage = page;
+  const res = await fetch(`${BASE_URL}/companies?page=${page}&limit=${companyLimit}`, { credentials:"include" });
+  if(!res.ok) return alert("Failed to load companies");
+  const data = await res.json(); 
+
+  const totalPages = Math.ceil(data.count / companyLimit) || 1;
+  document.getElementById("companyCurrentPage").textContent = companyCurrentPage;
+  document.getElementById("companyTotalPages").textContent = totalPages;
+
+  const tbody = document.querySelector("#companyTable tbody");
+  tbody.innerHTML = "";
+  data.data.forEach(c=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.name}</td>
+      <td>${c.industry||'-'}</td>
+      <td>${c.companySize||'-'}</td>
+      <td>${c.website||'-'}</td>
+      <td>${c.contactEmail||'-'}</td>
+      <td>${c.notes||'-'}</td>
+      <td>
+        <button class="btn btn-warning btn-sm edit-btn">Edit</button>
+        <button class="btn btn-danger btn-sm delete-btn">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+    tr.querySelector(".edit-btn").addEventListener("click", () => updateCompany(c._id));
+    tr.querySelector(".delete-btn").addEventListener("click", () => deleteCompany(c._id));
+  });
+
+  document.getElementById("companyPrevBtn").disabled = companyCurrentPage === 1;
+  document.getElementById("companyNextBtn").disabled = companyCurrentPage >= totalPages;
+}
+
+function changeCompanyLimit(){
+  companyLimit = Number(document.getElementById("companyLimitSelect").value);
+  loadCompanies(1);
+}
+
+function nextCompanyPage(){
+  loadCompanies(companyCurrentPage + 1);
+}
+
+function prevCompanyPage(){
+  if(companyCurrentPage > 1) loadCompanies(companyCurrentPage - 1);
+}
+
+async function updateCompany(id){
+
+  const res = await fetch(`${BASE_URL}/companies/${id}`,{
+    method: "PATCH",
+    credentials: "include",
+    headers: {
+  "Content-Type": "application/json",
+},
+    body: JSON.stringify({
+      name: cName.value,
+      industry: cIndustry.value,
+      companySize: cSize.value,
+      website: cWebsite.value,
+      contactEmail: cEmail.value,
+      notes: cNotes.value
+    })
+  });
+
+  if(!res.ok) return alert("Company update failed");
+
+  alert("Company updated");
+  editingCompanyId = null;
+  showCompanyList();
+}
+
+
+async function deleteCompany(id){
+  if(!confirm("Delete this company?")) return;
+  const res = await fetch(`${BASE_URL}/companies/${id}`,{
+    method:"DELETE",
+    credentials:"include"
+  });
+  if(!res.ok) return alert("Delete failed");
+  alert("Company deleted");
+  loadCompanies();
+}
+
+/* ---------- DASHBOARD OVERVIEW ---------- */
+async function loadDashboardOverview() {
+  const res = await fetch(`${BASE_URL}/dashboard/overview`, {
+    credentials: "include"
+  });
+
+  if (!res.ok) return;
+
+  const data = await res.json();
+
+  document.getElementById("statTotal").innerText = data.total || 0;
+  document.getElementById("statApplied").innerText = data.applied || 0;
+  document.getElementById("statInterviewed").innerText = data.interviewed || 0;
+  document.getElementById("statOffered").innerText = data.offered || 0;
+  document.getElementById("statRejected").innerText = data.rejected || 0;
+  document.getElementById("statWithdrawn").innerText = data.withdrawn || 0;
+}
+
+/* ---------- DASHBOARD METRICS ---------- */
+async function loadDashboardMetrics() {
+  const res = await fetch(`${BASE_URL}/dashboard/metrics`, {
+    credentials: "include"
+  })
+
+  if (!res.ok) return;
+
+  const data = await res.json();
+
+  document.getElementById("interviewRate").innerText = data.interviewRate;
+  document.getElementById("offerRate").innerText = data.offerRate;
+}
+
+let statusChartInstance;
+
+async function loadStatusChart() {
+  const res = await fetch(`${BASE_URL}/dashboard/status-chart`, {
+    credentials: "include"
+  });
+
+  if (!res.ok) return;
+
+  const data = await res.json();
+
+  const labels = data.map(d => d.status);
+  const values = data.map(d => d.value);
+
+  const ctx = document.getElementById("statusChart").getContext("2d");
+
+  if (statusChartInstance) statusChartInstance.destroy();
+
+  statusChartInstance = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels,
+      datasets: [{
+        data: values
+      }]
+    }
+  });
+}
+
+let timelineChartInstance;
+
+async function loadTimelineChart() {
+  const res = await fetch(`${BASE_URL}/dashboard/timeline`, {
+    credentials: "include"
+  });
+
+  if (!res.ok) return;
+
+  const data = await res.json();
+
+  const labels = data.map(d => d.month);
+  const values = data.map(d => d.count);
+
+  const ctx = document.getElementById("timelineChart").getContext("2d");
+
+  if (timelineChartInstance) timelineChartInstance.destroy();
+
+  timelineChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Applications",
+        data: values,
+        fill: false,
+        tension: 0.3
+      }]
+    }
+  });
+}
+
+function showAnalytics() {
+  hideAll()
+  document.getElementById("dashboardView").classList.add("hidden");
+  document.getElementById("analyticsPage").style.display = "block";
+
+  loadStatusChart();
+  loadTimelineChart();
+}
+
+function backToDashboard() {
+  document.getElementById("analyticsPage").style.display = "none";
+  document.getElementById("dashboardView").classList.remove("hidden");
+}
+
+let searchCurrentPage = 1;
+let searchLimit = 10;
+
+
+async function searchJobs(page = 1) {
+  searchCurrentPage = page;
+
+  const keyword = document.getElementById("searchKeyword").value.trim();
+  const status = document.getElementById("searchStatus").value;
+
+  const queryParams = new URLSearchParams({
+    page: searchCurrentPage,
+    limit: searchLimit,
+    keyword,
+    status
+  });
+
+  const res = await fetch(`${BASE_URL}/applications/search?${queryParams.toString()}`, {
+    credentials: "include"
+  });
+
+  if (!res.ok) return alert("Search failed");
+
+  const data = await res.json();
+  const results = data.results || [];
+
+  searchTotalPages = Math.max(
+    1,
+    Math.ceil((data.total ?? 0) / searchLimit)
+  );
+  document.getElementById("searchCurrentPage").innerText = searchCurrentPage;
+  document.getElementById("searchTotalPages").innerText = searchTotalPages;
+
+ 
+  searchResultsView.classList.remove("hidden");
+
+  const tbody = document.querySelector("#searchTable tbody");
+  tbody.innerHTML = "";
+
+  results.forEach(j => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${j.companyName}</td>
+      <td>${j.jobTitle}</td>
+      <td>${j.status}</td>
+      <td>${new Date(j.applicationDate || j.createdAt).toLocaleDateString()}</td>
+      <td>${j.notes || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("searchPrevBtn").disabled = searchCurrentPage === 1;
+  document.getElementById("searchNextBtn").disabled = searchCurrentPage >= totalPages;
+
+}
+
+
+
+function changeSearchLimit(){
+  searchLimit = Number(document.getElementById("searchLimitSelect").value);
+  searchCurrentPage = 1
+  searchJobs(1);
+}
+
+function searchNextPage(){
+  if (searchCurrentPage >= searchTotalPages) return;
+  searchJobs(searchCurrentPage + 1);
+}
+
+function searchPrevPage(){
+  if(searchCurrentPage > 1) searchJobs(searchCurrentPage - 1);
+}
+
+
+/* 🔹 SESSION RESTORE ON REFRESH */
+window.onload = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/get-loggedin-details`, { credentials:"include" });
+    if(!res.ok) return;
+    const data = await res.json();
+    loggedInRole = data.data[0].role;
+    showDashboard();
+    loadDashboardOverview();
+    loadDashboardMetrics()
+    if(loggedInRole === "admin") adminBtn.style.display="inline-block";
+    if(loggedInRole) companyBtn.style.display="inline-block";
+  } catch {}
+};
+</script>
+
+</div>
+</body>
+</html>
