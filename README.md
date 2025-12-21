@@ -1,3 +1,4 @@
+
 Node.js  Job Application Tracker  API
 The Job Application Tracker is a platform designed to help job seekers organize and track their job applications. It allows users to manage their job search process, including logging job applications, setting reminders for follow-ups, storing company-related information, and visualizing their application progress. 
 
